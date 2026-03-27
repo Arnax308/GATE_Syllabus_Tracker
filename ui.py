@@ -143,9 +143,12 @@ class SubjectCard(ft.Card):
         self.prog_text = ft.Text("0%", size=12, weight="bold")
         self.topic_container = ft.Column(spacing=4)
 
+        def delete_subject_action(e):
+            self.app.delete_subject_request(self.subject_name)
+
         header = ft.Row([
             ft.Row([ft.Icon(ft.Icons.MENU_BOOK, size=18, color=ft.Colors.BLUE_200), ft.Text(subject_name, size=16, weight="bold")], spacing=10),
-            ft.Row([ft.Container(content=self.prog_bar, width=100), self.prog_text], spacing=10)
+            ft.Row([ft.Container(content=self.prog_bar, width=100), self.prog_text, ft.IconButton(ft.Icons.DELETE_FOREVER, icon_size=18, icon_color=ft.Colors.RED_300, on_click=delete_subject_action, tooltip="Delete Subject")], spacing=10)
         ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN)
 
         self.content = ft.ExpansionTile(
@@ -265,6 +268,17 @@ class GateTrackerApp:
         self.subject_cards[subject].recalc_progress()
         self.subject_cards[subject].update()
         self.log_activity(f"Deleted topic: {topic}")
+
+    def delete_subject_request(self, subject):
+        del self.data["syllabus"][subject]
+        topics_to_delete = [tid for tid in self.data["topics"] if tid.startswith(f"{subject}::")]
+        for tid in topics_to_delete:
+            del self.data["topics"][tid]
+        if subject in self.data["test_series"]["subject_wise"]:
+            del self.data["test_series"]["subject_wise"][subject]
+        
+        self.log_activity(f"Deleted subject: {subject}")
+        self.view_syllabus()
 
     # -------------------------
     # Dashboard View
